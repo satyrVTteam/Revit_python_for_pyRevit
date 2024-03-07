@@ -1,0 +1,1 @@
+tooltip: "1. Get Property boundaries (from LINZ in case of New Zealand) \n2. Unclip survey point \n3. Acquire coordinates from linked DWG \n4. Specify coordinates at Survey point and assign height closer to real \n5. Clip survey point (for safety) 6. now you can run the script \nControl points are plased as controlp.rfa family"

@@ -1,0 +1,1 @@
+tooltip: "For collaboration please refer to daniil.timin@gmail.com \nYou still have to install IronPython2.7 to make Data-Shapes UI windows work. \nDon't switch pop-up python scripts to CPython3 because there is a bug in Dynamo TaskDialog."

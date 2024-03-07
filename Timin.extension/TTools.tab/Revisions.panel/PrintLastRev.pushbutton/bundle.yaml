@@ -1,0 +1,1 @@
+tooltip: Sends sheets with last revision on PDF printer. Edit the dynamo script to manage printers. After that it creates folder "Export", put the file there with current date and opens it to check.
