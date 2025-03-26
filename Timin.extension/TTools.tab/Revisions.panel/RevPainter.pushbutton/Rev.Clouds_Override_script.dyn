@@ -2,7 +2,7 @@
   "Uuid": "47aef372-e495-412a-a48f-26e7ae138a83",
   "IsCustomNode": false,
   "Description": null,
-  "Name": "Rev.Clouds_Override",
+  "Name": "Rev.Clouds_Override_script",
   "ElementResolver": {
     "ResolutionMap": {
       "Color": {
@@ -22,8 +22,8 @@
         "B": 130,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "23675b7443d2430aa85c1b3058c75b9d",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -41,12 +41,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
-      "Code": "import clr\n\nclr.AddReference('RevitAPI')\nfrom Autodesk.Revit.DB import *\nclr.AddReference(\"RevitNodes\")\nimport Revit\nclr.ImportExtensions(Revit.Elements)\n\nclr.AddReference(\"RevitServices\")\nimport RevitServices\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\n\n\nelementid = IN[0]\n\nrgbcolor = IN[1]\n\n\ndef runit():\n\tif IN[2] == True:\n\t\t#getting all the views required\n\t\tlv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\txx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tyy = FilteredElementCollector(doc).OfClass(ViewSheet).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tview = []\n\t\tfor i in lv:\n\t\t\tview.append(i)\n\t\t\n\t\tfor i in xx:\n\t\t\tview.append(i)\n\t\t\t\n\t\tfor i in yy:\n\t\t\tview.append(i)\n\t\t\n\t\tcv = []\n\t\tfor i in rgbcolor: \n\t\t\togs = OverrideGraphicSettings().SetProjectionLineColor(Color(i.Red,i.Green,i.Blue))\n\t\t\tcv.append(ogs)\n\t\t\n\t\tTransactionManager.Instance.EnsureInTransaction(doc)\n\t\tfor i in view:\n\t\t\tfor j in range(0,len(elementid)):\n\t\t\t\tfor f in elementid[j]:\n\t\t\t\t\tif f!='nothing':\n\t\t\t\t\t\ti.SetElementOverrides(ElementId(f), cv[j])\n\t\tTransactionManager.Instance.TransactionTaskDone()\n\t\n\telse: cv = \"set bool to true\"\n\treturn cv\nOUT = runit()",
+      "Code": "import clr\n\nclr.AddReference('RevitAPI')\nfrom Autodesk.Revit.DB import *\nclr.AddReference(\"RevitNodes\")\nimport Revit\nclr.ImportExtensions(Revit.Elements)\n\nclr.AddReference(\"RevitServices\")\nimport RevitServices\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\n\n\nelementid = IN[0]\n\nrgbcolor = IN[1]\n\n\ndef runit():\n    if IN[2] == True:\n        #getting all the views required\n        lv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\n        \n        xx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\n        \n        yy = FilteredElementCollector(doc).OfClass(ViewSheet).WhereElementIsNotElementType().ToElements()\n        \n        view = []\n        for i in lv:\n            if i.IsTemplate != True:\n                view.append(i)\n        for i in xx:\n            if i.IsTemplate != True:\n                view.append(i)\n        for i in yy:\n            if i.IsTemplate !=True:\n                view.append(i)\n        \n        cv = []\n        for i in rgbcolor: \n            ogs = OverrideGraphicSettings().SetProjectionLineColor(Color(i.Red,i.Green,i.Blue))\n            cv.append(ogs)\n        \n        TransactionManager.Instance.EnsureInTransaction(doc)\n        for i in view:\n            for j in range(0,len(elementid)):\n                for f in elementid[j]:\n                    if f!='nothing':\n                        i.SetElementOverrides(ElementId(f), cv[j])\n        TransactionManager.Instance.TransactionTaskDone()\n    \n    else: cv = \"set bool to true\"\n    return cv\nOUT = runit()",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "dd3b45c198c7455eb57edf827358f928",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "970e5aef0357432fad11754e4edbc3fd",
@@ -92,12 +91,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
-      "Code": "zipped = zip(IN[2],IN[1])\n\n\ndates = IN[0]\n\nz = []\nfor j in range(0,len(dates)): #getting for every date\n\ts = []\n\tb = []\n\t\n\tfor i in range(0,len(IN[2])): #getting for all the lists\n\t\ts.append(dates[j] in zipped[i][0])\n\t\tif s[i] == True: b.append(zipped[i][1].Id)\n\t\telse: b.append('nothing')\n\tz.append(b)\t\n\n\n\n\nOUT = z\n",
+      "Code": "zipped = list(zip(IN[2],IN[1]))\n\n\ndates = IN[0]\n\nz = []\nfor j in range(0,len(dates)): #getting for every date\n\ts = []\n\tb = []\n\t\n\tfor i in range(0,len(IN[2])): #getting for all the lists\n\t\ts.append(dates[j] in zipped[i][0])\n\t\tif s[i] == True: b.append(zipped[i][1].Id)\n\t\telse: b.append('nothing')\n\tz.append(b)\t\n\n\n\n\nOUT = z\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "a3a9ea0fcbe244848af8aea6a2f25536",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "e7c05f069e0149d1a70c0df638693947",
@@ -143,12 +141,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import *\r\nclr.AddReference(\"RevitNodes\")\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\n\r\nclr.AddReference(\"RevitServices\")\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n#getting all the views required\r\n#lv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\r\n\r\n#xx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\r\n\r\n#yy = FilteredElementCollector(doc).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().Where<IndependentTag>(tag => tag.IsMaterialTag == true)\r\n\r\n#yy = FilteredElementCollector(doc).OfClass(IndependentTag)\r\n\r\nyy= FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_RevisionCloudTags).WhereElementIsNotElementType().ToElements()\r\n\r\nOUT = yy\r\n\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "2c100184ae944cf9942b7e5132bf37d5",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "b447075966d943e996bfde27e3dac433",
@@ -176,12 +173,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import *\r\nclr.AddReference(\"RevitNodes\")\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\n\r\nclr.AddReference(\"RevitServices\")\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n#getting all the views required\r\n#lv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\r\n\r\n#xx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\r\n\r\nyy = FilteredElementCollector(doc).OfClass(RevisionCloud).ToElements()\r\n\r\n\r\nOUT = yy\r\n\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "24f8a6eb80dd4cf48c469f8c162fdd05",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "86bcf3b02a9d4c6ab55d50aaa6dfbe64",
@@ -209,12 +205,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\ntaggedelements = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nfor i in tags:\r\n\ttagID = doc.GetElement(i.Id)\r\n\ttaggedElem = doc.GetElement(tagID.TaggedLocalElementId)\r\n\ttaggedelements.Add(taggedElem)\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nOUT = taggedelements",
+      "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\ntaggedelements = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nfor i in tags:\r\n    taggedelements.append(i.GetTaggedLocalElements())\r\n\r\ntaggedelements1 = sum(taggedelements,[]) #This is very inefficient. But fun\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nOUT = taggedelements1",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "9598f8a412074c55a441b561a6a025bb",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "9ab15e744f8b4ab2ad7ab5a0f1aad9d7",
@@ -242,12 +237,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\n#tags2 = UnwrapElement(IN[1])\r\n\r\nf = []\r\nfor i in tags: f.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n#z = []\r\n#for i in tags2: z.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n\r\nOUT = f\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "2acd2a4b97fc4da388ef0c833f1475c3",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "40f5ba601f504990b805275a1bd8acea",
@@ -275,12 +269,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\n#tags2 = UnwrapElement(IN[1])\r\n\r\nf = []\r\nfor i in tags: f.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n#z = []\r\n#for i in tags2: z.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n\r\nOUT = f\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "d397f15a2bd0494bb3ec17b6782780d9",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "7b5d58340eee4872a676716a74568af8",
@@ -314,8 +307,8 @@
         "B": 0,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "517c0e30a29042a2a8df8cc9f325509d",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -339,8 +332,8 @@
         "B": 79,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "696b844057fa4fcfafa69d570cc51703",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -364,8 +357,8 @@
         "B": 205,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "429ea1a194614c47b1fc6952e91e1d0f",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -389,8 +382,8 @@
         "B": 147,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "0f9ce6e8c01a47439f3c9a36815fae46",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -414,8 +407,8 @@
         "B": 45,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "3d18728245d74b55b8678df4eca31aab",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -439,8 +432,8 @@
         "B": 60,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "cc680ee7d5e148869f74d2e66af040e8",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -459,8 +452,8 @@
     {
       "ConcreteType": "CoreNodeModels.CreateList, CoreNodeModels",
       "VariableInputPorts": true,
-      "NodeType": "ExtensionNode",
       "Id": "48ca9d1f638343fa840fd8be3a3ff821",
+      "NodeType": "ExtensionNode",
       "Inputs": [
         {
           "Id": "7be92b2f232642ae82c208ec1b00b5f3",
@@ -601,7 +594,7 @@
         }
       ],
       "Replication": "Disabled",
-      "Description": "Makes a new list out of the given inputs"
+      "Description": "Makes a new list from the given inputs"
     },
     {
       "ConcreteType": "CoreNodeModels.Input.ColorPalette, CoreNodeModels",
@@ -611,8 +604,8 @@
         "B": 0,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "d2cf5c74e74544acb9ef813b1712edf1",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -636,8 +629,8 @@
         "B": 204,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "0c3c0bce56b04cbba6b99d8eff8de49d",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -661,8 +654,8 @@
         "B": 50,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "1a2bf69216a64bc7a442d1058cc24ebc",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -686,8 +679,8 @@
         "B": 50,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "80b94c0e54694e6b9adbf7090060ec05",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -711,8 +704,8 @@
         "B": 71,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "2a11c67f99cf4786b579db65f688ce8d",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -736,8 +729,8 @@
         "B": 255,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "8b9256c2a11e474ab075488ece44d58c",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -761,8 +754,8 @@
         "B": 170,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "95a76b34d6b24513a3e8f33ccaba923e",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -780,9 +773,8 @@
     },
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
-      "NodeType": "CodeBlockNode",
-      "Code": "\"from latest down to oldest\";\n\"red is always latest or remove REVERSE node\";",
       "Id": "3565488fb082401193b1d630a600ef87",
+      "NodeType": "CodeBlockNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -805,13 +797,13 @@
         }
       ],
       "Replication": "Disabled",
-      "Description": "Allows for DesignScript code to be authored directly"
+      "Description": "Allows for DesignScript code to be authored directly",
+      "Code": "\"from latest down to oldest\";\n\"red is always latest or remove REVERSE node\";"
     },
     {
       "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
-      "NodeType": "BooleanInputNode",
-      "InputValue": true,
       "Id": "bc0e28d18e434a39aff44dec03885428",
+      "NodeType": "BooleanInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -825,16 +817,16 @@
         }
       ],
       "Replication": "Disabled",
-      "Description": "Selection between a true and false."
+      "Description": "Enables selection between True and False",
+      "InputValue": true
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "zipped = list(zip(IN[2],IN[1]))\n\n\ndates = IN[0]\n\nz = []\nfor j in range(0,len(dates)): #getting for every date\n\ts = []\n\tb = []\n\t\n\tfor i in range(0,len(IN[2])): #getting for all the lists\n\t\ts.append(dates[j] in zipped[i][0])\n\t\tif s[i] == True: b.append(zipped[i][1].Id)\n\t\telse: b.append('nothing')\n\t\n\tz.append(b)\t\n\n\n\n\nOUT = z",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "ace865a4ceec4608aa98ab3d17024e23",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "19e4741f807f4efe9ccdfe2fe9d94445",
@@ -880,12 +872,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
-      "Code": "import clr\n\nclr.AddReference('RevitAPI')\nfrom Autodesk.Revit.DB import *\nclr.AddReference(\"RevitNodes\")\nimport Revit\nclr.ImportExtensions(Revit.Elements)\n\nclr.AddReference(\"RevitServices\")\nimport RevitServices\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\n\n\nelementid = IN[0]\n\nrgbcolor = IN[1]\n\n\ndef runit():\n\tif IN[2] == True:\n\t\t#getting all the views required\n\t\tlv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\txx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tyy = FilteredElementCollector(doc).OfClass(ViewSheet).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tview = []\n\t\tfor i in lv:\n\t\t\tview.append(i)\n\t\t\n\t\tfor i in xx:\n\t\t\tview.append(i)\n\t\t\t\n\t\tfor i in yy:\n\t\t\tview.append(i)\n\t\t\n\t\tcv = []\n\t\tfor i in rgbcolor: \n\t\t\togs = OverrideGraphicSettings().SetProjectionLineColor(Color(i.Red,i.Green,i.Blue))\n\t\t\tcv.append(ogs)\n\t\t\n\t\tTransactionManager.Instance.EnsureInTransaction(doc)\n\t\tfor i in view:\n\t\t\tfor j in range(0,len(elementid)):\n\t\t\t\tfor f in elementid[j]:\n\t\t\t\t\tif f!='nothing':\n\t\t\t\t\t\ti.SetElementOverrides(ElementId(f), cv[j])\n\t\t\t\t\t\n\t\tTransactionManager.Instance.TransactionTaskDone()\n\t\n\telse: cv = \"set bool to true\"\n\treturn cv\nOUT = runit()",
+      "Code": "import clr\n\nclr.AddReference('RevitAPI')\nfrom Autodesk.Revit.DB import *\nclr.AddReference(\"RevitNodes\")\nimport Revit\nclr.ImportExtensions(Revit.Elements)\n\nclr.AddReference(\"RevitServices\")\nimport RevitServices\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\n\n\nelementid = IN[0]\n\nrgbcolor = IN[1]\n\n\ndef runit():\n    if IN[2] == True:\n        #getting all the views required\n        lv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\n        \n        xx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\n        \n        yy = FilteredElementCollector(doc).OfClass(ViewSheet).WhereElementIsNotElementType().ToElements()\n        \n        view = []\n        for i in lv:\n           if i.IsTemplate != True:\n               view.append(i)\n        for i in xx:\n           if i.IsTemplate != True:\n               view.append(i)\n        for i in yy:\n            if i.IsTemplate !=True:\n               view.append(i)\n        \n        cv = []\n        for i in rgbcolor: \n            ogs = OverrideGraphicSettings().SetProjectionLineColor(Color(i.Red,i.Green,i.Blue))\n            cv.append(ogs)\n        \n        TransactionManager.Instance.EnsureInTransaction(doc)\n        for i in view:\n            for j in range(0,len(elementid)):\n                for f in elementid[j]:\n                    if f!='nothing':\n                        i.SetElementOverrides(ElementId(f), cv[j])\n                    \n        TransactionManager.Instance.TransactionTaskDone()\n    \n    else: cv = \"set bool to true\"\n    return cv\nOUT = runit()",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "2c8a4a0b5ee9485fb47ec46a2aa3a5de",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "1419352da96d410cb5e32010e0acd37b",
@@ -931,9 +922,8 @@
     },
     {
       "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
-      "NodeType": "FunctionNode",
-      "FunctionSignature": "DSCore.List.Reverse@var[]..[]",
       "Id": "de4deb65bf124d1090c9b5a379922c06",
+      "NodeType": "FunctionNode",
       "Inputs": [
         {
           "Id": "c7276b0a0b7e473cb9b4a957d6594f61",
@@ -956,17 +946,17 @@
           "KeepListStructure": false
         }
       ],
+      "FunctionSignature": "DSCore.List.Reverse@var[]..[]",
       "Replication": "Auto",
       "Description": "Creates a new list containing the items of the given list but in reverse order.\n\nList.Reverse (list: var[]..[]): var[]..[]"
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "\r\nk = list(set(IN[0]))\r\ny = []\r\n\r\nfor i in k:\r\n\tif len(i)<2: #check empty and make it first\r\n\t\tx = \"999999999\"\r\n\t\ty.append(x)\t\r\n\telse:\r\n\t\tif (i)[:4] == \"Date\": #check Date 9 default names and sent them on top\r\n\t\t\tx = \"999999\"+i[len(i)-2:]\r\n\t\t\tmm = x.replace(\" \",\"0\")\r\n\t\t\ty.append(mm)\r\n\t\t\t\r\n\t\telse:\r\n\t\t\tif len(i)<=9: #check for 2020 year instead of just 20\r\n\t\t\t\tx = \"20\"+i[6:8]+i[3:5]+i[0:2]\r\n\t\t\t\ty.append(x)\r\n\t\t\telse:\r\n\t\t\t\tif len(i)<11:\r\n\t\t\t\t\tx = i[6:10]+i[3:5]+i[0:2]\r\n\t\t\t\t\ty.append(x)\t\r\n\r\nc = zip(y, k)\r\n\r\nf = sorted(c)\r\n#strange way to get second element from every sublist\r\n#sorted_elements =  [element for _, element in f]\r\nss = []\r\nfor i in range(0, len(f)-1):\r\n\tif f[i][0][:1] == \"9\":  #check for first 9\r\n\t\tss.append(f[i][1])\r\n\telif f[i][0] == f[i+1][0]: #check for double\r\n\t\tss.append(f[i][1])\r\n\t\t\r\nif f[len(f)-1][0][:1]==\"9\": ss.append(f[len(f)-1][1])\r\n\r\n\r\n#we can filter all Data9 \r\nxm = []\r\nfor i in ss:\r\n\tif i[:4]!=\"Date\":xm.append(i)\r\n\r\n\r\n\r\nOUT = xm\r\n\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "57522521f64f4fd487039f4ea92e5f77",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "e21b5894431f4367924968cc2161baf5",
@@ -994,12 +984,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\n\nclr.AddReference('RevitAPI')\nfrom Autodesk.Revit.DB import *\nclr.AddReference(\"RevitNodes\")\nimport Revit\nclr.ImportExtensions(Revit.Elements)\n\nclr.AddReference(\"RevitServices\")\nimport RevitServices\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\n\n\nelementid = IN[0]\n\nrgbcolor = IN[1]\n\n\ndef runit():\n\tif IN[2] == True:\n\t\t#getting all the views required\n\t\tlv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\txx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tyy = FilteredElementCollector(doc).OfClass(ViewSheet).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tview = []\n\t\tfor i in lv:\n\t\t\tview.append(i)\n\t\t\n\t\tfor i in xx:\n\t\t\tview.append(i)\n\t\t\t\n\t\tfor i in yy:\n\t\t\tview.append(i)\n\t\t\n\t\tcv = []\n\t\tfor i in rgbcolor: \n\t\t\togs = OverrideGraphicSettings().SetProjectionLineColor(Color(i.Red,i.Green,i.Blue))\n\t\t\tcv.append(ogs)\n\t\t\n\t\tTransactionManager.Instance.EnsureInTransaction(doc)\n\t\tfor i in view:\n\t\t\tfor j in range(0,len(elementid)):\n\t\t\t\tfor f in elementid[j]:\n\t\t\t\t\tif f!='nothing':\n\t\t\t\t\t\ti.SetElementOverrides(ElementId(f), cv[j])\n\t\tTransactionManager.Instance.TransactionTaskDone()\n\t\n\telse: cv = \"set bool to true\"\n\treturn cv\nOUT = runit()",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "83d92b182dfc43198953367317a86838",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "b404ae72912e4ed9bd6f7f03dc6e4606",
@@ -1045,12 +1034,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\n\nclr.AddReference('RevitAPI')\nfrom Autodesk.Revit.DB import *\nclr.AddReference(\"RevitNodes\")\nimport Revit\nclr.ImportExtensions(Revit.Elements)\n\nclr.AddReference(\"RevitServices\")\nimport RevitServices\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\n\n\nelementid = IN[0]\n\nrgbcolor = IN[1]\n\n\ndef runit():\n\tif IN[2] == True:\n\t\t#getting all the views required\n\t\tlv = FilteredElementCollector(doc).OfClass(ViewPlan).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\txx = FilteredElementCollector(doc).OfClass(ViewSection).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tyy = FilteredElementCollector(doc).OfClass(ViewSheet).WhereElementIsNotElementType().ToElements()\n\t\t\n\t\tview = []\n\t\tfor i in lv:\n\t\t\tview.append(i)\n\t\t\n\t\tfor i in xx:\n\t\t\tview.append(i)\n\t\t\t\n\t\tfor i in yy:\n\t\t\tview.append(i)\n\t\t\n\t\tcv = []\n\t\tfor i in rgbcolor: \n\t\t\togs = OverrideGraphicSettings().SetProjectionLineColor(Color(i.Red,i.Green,i.Blue))\n\t\t\tcv.append(ogs)\n\t\t\n\t\tTransactionManager.Instance.EnsureInTransaction(doc)\n\t\tfor i in view:\n\t\t\tfor j in range(0,len(elementid)):\n\t\t\t\tfor f in elementid[j]:\n\t\t\t\t\tif f!='nothing':\n\t\t\t\t\t\ti.SetElementOverrides(ElementId(f), cv[j])\n\t\t\t\t\t\n\t\tTransactionManager.Instance.TransactionTaskDone()\n\t\n\telse: cv = \"set bool to true\"\n\treturn cv\nOUT = runit()",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "1c69a2126f444f8087af2ec790d601c5",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "6503820c904a43a8a4b525676dccb651",
@@ -1096,12 +1084,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "zipped = zip(IN[2],IN[1])\n\n\ndates = IN[0]\n\nz = []\nfor j in range(0,len(dates)): #getting for every date\n\ts = []\n\tb = []\n\t\n\tfor i in range(0,len(IN[2])): #getting for all the lists\n\t\ts.append(dates[j] in zipped[i][0])\n\t\tif s[i] == True: b.append(zipped[i][1].Id)\n\t\telse: b.append('nothing')\n\t\n\tz.append(b)\t\n\n\n\n\nOUT = z",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "c0270e4750e8455887aa05ad50c44614",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "1f6487399f834fc9892bd827bcef38cf",
@@ -1147,9 +1134,8 @@
     },
     {
       "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
-      "NodeType": "BooleanInputNode",
-      "InputValue": true,
       "Id": "d7d8db7c9d9c4f73b71598178c999ef0",
+      "NodeType": "BooleanInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -1163,16 +1149,16 @@
         }
       ],
       "Replication": "Disabled",
-      "Description": "Selection between a true and false."
+      "Description": "Enables selection between True and False",
+      "InputValue": true
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "zipped = zip(IN[2],IN[1])\n\n\ndates = IN[0]\n\nz = []\nfor j in range(0,len(dates)): #getting for every date\n\ts = []\n\tb = []\n\t\n\tfor i in range(0,len(IN[2])): #getting for all the lists\n\t\ts.append(dates[j] in zipped[i][0])\n\t\tif s[i] == True: b.append(zipped[i][1].Id)\n\t\telse: b.append('nothing')\n\tz.append(b)\t\n\n\n\n\nOUT = z\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "622565079c454b29b5953f4cba4f896d",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "c26dbb19c00c444a8df76db38d083fb3",
@@ -1219,8 +1205,8 @@
     {
       "ConcreteType": "CoreNodeModels.CreateList, CoreNodeModels",
       "VariableInputPorts": true,
-      "NodeType": "ExtensionNode",
       "Id": "09a50c9a5017438a945f0887d86f10c2",
+      "NodeType": "ExtensionNode",
       "Inputs": [
         {
           "Id": "296a4b67d4df45c58c6f70541f983969",
@@ -1361,7 +1347,7 @@
         }
       ],
       "Replication": "Disabled",
-      "Description": "Makes a new list out of the given inputs"
+      "Description": "Makes a new list from the given inputs"
     },
     {
       "ConcreteType": "CoreNodeModels.Input.ColorPalette, CoreNodeModels",
@@ -1371,8 +1357,8 @@
         "B": 60,
         "A": 255
       },
-      "NodeType": "ColorInputNode",
       "Id": "f622d832e23040aba94595b63553c882",
+      "NodeType": "ColorInputNode",
       "Inputs": [],
       "Outputs": [
         {
@@ -1390,12 +1376,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "dates = IN[0]\r\ndates_stay = IN[1]\r\n\r\noutt = []\r\ntt = []\r\nm = []\r\nfor i in dates:\r\n\tfor j in dates_stay:\r\n\t\tif i == j: m =True\r\n\tif m != True: outt.append(False)\r\n\telse: outt.append(True)\r\n\r\nOUT = outt",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "bd6d3b7b0afd4bbc9ab239659a4a360f",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "f8d2e6aedd2f49e293ddab219f698f7a",
@@ -1432,9 +1417,8 @@
     },
     {
       "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
-      "NodeType": "FunctionNode",
-      "FunctionSignature": "DSCore.List.FilterByBoolMask@var[]..[],var[]..[]",
       "Id": "7270227e86e6497b8c8c1f028475de7b",
+      "NodeType": "FunctionNode",
       "Inputs": [
         {
           "Id": "ca3e92b0a70f41eea73a0da5b2ef382e",
@@ -1475,14 +1459,14 @@
           "KeepListStructure": false
         }
       ],
+      "FunctionSignature": "DSCore.List.FilterByBoolMask@var[]..[],var[]..[]",
       "Replication": "Auto",
       "Description": "Filters a sequence by looking up corresponding indices in a separate list of booleans.\n\nList.FilterByBoolMask (list: var[]..[], mask: var[]..[]): var[]..[]"
     },
     {
       "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
-      "NodeType": "FunctionNode",
-      "FunctionSignature": "DSCore.List.FilterByBoolMask@var[]..[],var[]..[]",
       "Id": "62ecbb92d14b4d1fa87134a902f70c03",
+      "NodeType": "FunctionNode",
       "Inputs": [
         {
           "Id": "f51ab2b80ba449c5bf879715b1dc9a34",
@@ -1523,17 +1507,17 @@
           "KeepListStructure": false
         }
       ],
+      "FunctionSignature": "DSCore.List.FilterByBoolMask@var[]..[],var[]..[]",
       "Replication": "Auto",
       "Description": "Filters a sequence by looking up corresponding indices in a separate list of booleans.\n\nList.FilterByBoolMask (list: var[]..[], mask: var[]..[]): var[]..[]"
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "dates = IN[0]\r\ndates_stay = IN[1]\r\n\r\noutt = []\r\ntt = []\r\nm = []\r\nfor i in dates:\r\n\tfor j in dates_stay:\r\n\t\tif i == j: m =True\r\n\tif m != True: outt.append(False)\r\n\telse: outt.append(True)\r\n\r\nOUT = outt",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "03f9292dc1904c7590f0f2a53c170978",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "ae3f11fa6cf14a2f933aca60a83c0941",
@@ -1570,12 +1554,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\n#tags2 = UnwrapElement(IN[1])\r\n\r\nf = []\r\nfor i in tags: f.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n#z = []\r\n#for i in tags2: z.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n\r\nOUT = f\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "9141a4b7e7694fd798512b85f6880c01",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "326f4a8122a6453cb132a5630d1f0644",
@@ -1603,12 +1586,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\n#tags2 = UnwrapElement(IN[1])\r\n\r\nf = []\r\nfor i in tags: f.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n#z = []\r\n#for i in tags2: z.append(i.get_Parameter(BuiltInParameter.REVISION_CLOUD_REVISION_DATE).AsString())\r\n\r\nOUT = f\r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "6815f188174147e08f13ffe6eab0cacf",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "77f58bd5986c478fb91aade53d470ada",
@@ -1636,12 +1618,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "import clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference('RevitAPI')\r\nimport Autodesk\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\n\r\ntags = UnwrapElement(IN[0])\r\ntaggedelements = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nfor i in tags:\r\n\ttagID = doc.GetElement(i.Id)\r\n\ttaggedElem = doc.GetElement(tagID.TaggedLocalElementId)\r\n\ttaggedelements.Add(taggedElem)\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nOUT = taggedelements",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "0c23dad010c04cbe8db98069d4e36a7f",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "4bbf95c804e54ed7bfc959d8608d75d8",
@@ -1669,12 +1650,11 @@
     },
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
-      "NodeType": "PythonScriptNode",
       "Code": "k = list(set(IN[0]))\r\ny = []\r\n\r\nfor i in k:\r\n\tif len(i)<2: #check empty and make it first\r\n\t\tx = \"999999999\"\r\n\t\ty.append(x)\t\r\n\telse:\r\n\t\tif (i)[:4] == \"Date\": #check Date 9 default names and sent them to back\r\n\t\t\tx = \"00000\"+i[len(i)-2:]\r\n\t\t\tmm = x.replace(\" \",\"0\")\r\n\t\t\ty.append(mm)\r\n\t\t\t\r\n\t\telse:\r\n\t\t\tif len(i)<=9: #check for 2020 year instead of just 20\r\n\t\t\t\tx = \"20\"+i[6:8]+i[3:5]+i[0:2]\r\n\t\t\t\ty.append(x)\r\n\t\t\telse:\r\n\t\t\t\tif len(i)<11:\r\n\t\t\t\t\tx = i[6:10]+i[3:5]+i[0:2]\r\n\t\t\t\t\ty.append(x)\t\r\n\r\n\r\n\r\nc = zip(y, k)\r\n\r\nf = sorted(c)\r\n#strange way to get second element from every sublist\r\n#OUT =  [element for _, element in f]\r\nzz = []\r\n\r\nfor i in range(0, len(k)-1):\r\n\tif f[i][0][:1]==\"9\": #remove all the Date 9 and noname dates\r\n\t\tdo = \"nothing\"\r\n\telse:\t\r\n\t\tif f[i][0]==f[i+1][0]: #remove double name #==f[i+1]\r\n\t\t\tdo = \"nothing\"\r\n\t\telse:\r\n\t\t\tzz.append(f[i][1])\r\n\r\nif f[len(k)-1][0][:1]==\"9\": do = \"nothing\"\r\nelse: zz.append(f[len(k)-1][1])\r\n\r\nOUT = zz\r\n \r\n",
       "Engine": "CPython3",
-      "EngineName": "CPython3",
       "VariableInputPorts": true,
       "Id": "7927696cf7a240eb80123a973d623d87",
+      "NodeType": "PythonScriptNode",
       "Inputs": [
         {
           "Id": "51bd093660ce4edca5475cef62a7ba8a",
@@ -2119,7 +2099,8 @@
   ],
   "Dependencies": [],
   "NodeLibraryDependencies": [],
-  "Thumbnail": null,
+  "EnableLegacyPolyCurveBehavior": true,
+  "Thumbnail": "",
   "GraphDocumentationURL": null,
   "ExtensionWorkspaceData": [
     {
@@ -2148,12 +2129,12 @@
       "ScaleFactor": 1.0,
       "HasRunWithoutCrash": true,
       "IsVisibleInDynamoLibrary": true,
-      "Version": "2.16.1.2727",
+      "Version": "3.0.3.7597",
       "RunType": "Manual",
       "RunPeriod": "1000"
     },
     "Camera": {
-      "Name": "Background Preview",
+      "Name": "_Background Preview",
       "EyeX": -17.0,
       "EyeY": 24.0,
       "EyeZ": 50.0,
@@ -2167,432 +2148,432 @@
     "ConnectorPins": [],
     "NodeViews": [
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "23675b7443d2430aa85c1b3058c75b9d",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1321.0334739994657,
         "Y": 2033.3218753295812
       },
       {
-        "Name": "View Set Element Overrides",
-        "ShowGeometry": true,
         "Id": "dd3b45c198c7455eb57edf827358f928",
+        "Name": "View Set Element Overrides",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -920.40533841118736,
+        "ShowGeometry": true,
+        "X": -920.4053384111874,
         "Y": 1418.1774158038622
       },
       {
-        "Name": "sorting one list by another",
-        "ShowGeometry": true,
         "Id": "a3a9ea0fcbe244848af8aea6a2f25536",
+        "Name": "sorting one list by another",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1489.1451502040604,
         "Y": 1405.7176461124952
       },
       {
-        "Name": "get all revision tags",
-        "ShowGeometry": true,
         "Id": "2c100184ae944cf9942b7e5132bf37d5",
+        "Name": "get all revision tags",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -2506.0391893063634,
         "Y": 1556.2738513899187
       },
       {
-        "Name": "get all revisions",
-        "ShowGeometry": true,
         "Id": "24f8a6eb80dd4cf48c469f8c162fdd05",
+        "Name": "get all revisions",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -2282.1994945803353,
-        "Y": 996.55729486942755
+        "ShowGeometry": true,
+        "X": -2385.349982806765,
+        "Y": 1005.4715345926993
       },
       {
-        "Name": "get tagged element",
-        "ShowGeometry": true,
         "Id": "9598f8a412074c55a441b561a6a025bb",
+        "Name": "get tagged element",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -2240.5663871163797,
-        "Y": 1435.1159980132843
+        "ShowGeometry": true,
+        "X": -2245.436611796641,
+        "Y": 1340.5505726036606
       },
       {
-        "Name": "get date",
-        "ShowGeometry": true,
         "Id": "2acd2a4b97fc4da388ef0c833f1475c3",
+        "Name": "get date",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1926.4710321596658,
         "Y": 1491.8638122998927
       },
       {
-        "Name": "get date",
-        "ShowGeometry": true,
         "Id": "d397f15a2bd0494bb3ec17b6782780d9",
+        "Name": "get date",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -2159.6630325459591,
+        "ShowGeometry": true,
+        "X": -2159.663032545959,
         "Y": 1111.5837128604574
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "517c0e30a29042a2a8df8cc9f325509d",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1321.3264350017744,
         "Y": 2278.8849380713355
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "696b844057fa4fcfafa69d570cc51703",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -1321.2332927806331,
+        "ShowGeometry": true,
+        "X": -1321.233292780633,
         "Y": 2196.42093213532
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "429ea1a194614c47b1fc6952e91e1d0f",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1323.5551425479543,
         "Y": 1949.4400456708695
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "0f9ce6e8c01a47439f3c9a36815fae46",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1321.731158290854,
         "Y": 2114.958831160639
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "3d18728245d74b55b8678df4eca31aab",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1317.3000530803702,
         "Y": 2362.2147536056664
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "cc680ee7d5e148869f74d2e66af040e8",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1322.4138179641252,
         "Y": 1865.8686718617735
       },
       {
-        "Name": "List Create",
-        "ShowGeometry": true,
         "Id": "48ca9d1f638343fa840fd8be3a3ff821",
+        "Name": "List Create",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1130.131557662703,
         "Y": 1876.5266120374993
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "d2cf5c74e74544acb9ef813b1712edf1",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1325.6850823955613,
         "Y": 2769.9156250532897
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "0c3c0bce56b04cbba6b99d8eff8de49d",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1318.5127572686652,
-        "Y": 2690.8438665505219
+        "Y": 2690.843866550522
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "1a2bf69216a64bc7a442d1058cc24ebc",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1319.3093410651852,
-        "Y": 2607.9641861126788
+        "Y": 2607.964186112679
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "80b94c0e54694e6b9adbf7090060ec05",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1318.3766269308392,
         "Y": 2528.424738189342
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "2a11c67f99cf4786b579db65f688ce8d",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1317.4439127964938,
-        "Y": 2445.4850580663851
+        "Y": 2445.485058066385
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "8b9256c2a11e474ab075488ece44d58c",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1322.5345506184633,
         "Y": 2933.7441839233015
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "95a76b34d6b24513a3e8f33ccaba923e",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1321.3455747817857,
-        "Y": 2852.4338860939829
+        "Y": 2852.433886093983
       },
       {
-        "Name": "Code Block",
-        "ShowGeometry": true,
         "Id": "3565488fb082401193b1d630a600ef87",
+        "Name": "Code Block",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1464.7424826022934,
-        "Y": 1757.4332903650411
+        "Y": 1757.433290365041
       },
       {
-        "Name": "run it",
-        "ShowGeometry": true,
         "Id": "bc0e28d18e434a39aff44dec03885428",
+        "Name": "run it",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1370.4124870807166,
         "Y": 1610.0644648450982
       },
       {
-        "Name": "sorting one list by another",
-        "ShowGeometry": true,
         "Id": "ace865a4ceec4608aa98ab3d17024e23",
+        "Name": "sorting one list by another",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1385.5672699275383,
         "Y": 1069.7289468794936
       },
       {
-        "Name": "View Set Element Overrides",
-        "ShowGeometry": true,
         "Id": "2c8a4a0b5ee9485fb47ec46a2aa3a5de",
+        "Name": "View Set Element Overrides",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -966.12942282012546,
+        "ShowGeometry": true,
+        "X": -966.1294228201255,
         "Y": 1162.1218478045573
       },
       {
-        "Name": "List.Reverse",
-        "ShowGeometry": true,
         "Id": "de4deb65bf124d1090c9b5a379922c06",
+        "Name": "List.Reverse",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1815.2754283848626,
         "Y": 1173.2902527727063
       },
       {
-        "Name": "remove all normal dates",
-        "ShowGeometry": true,
         "Id": "57522521f64f4fd487039f4ea92e5f77",
+        "Name": "remove all normal dates",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1497.2998925044078,
         "Y": 145.51537962743117
       },
       {
-        "Name": "View Set Element Overrides",
-        "ShowGeometry": true,
         "Id": "83d92b182dfc43198953367317a86838",
+        "Name": "View Set Element Overrides",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -154.77059574532757,
         "Y": 430.3537038999329
       },
       {
-        "Name": "View Set Element Overrides",
-        "ShowGeometry": true,
         "Id": "1c69a2126f444f8087af2ec790d601c5",
+        "Name": "View Set Element Overrides",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -171.7612687294868,
         "Y": -195.50547213368577
       },
       {
-        "Name": "sorting one list by another",
-        "ShowGeometry": true,
         "Id": "c0270e4750e8455887aa05ad50c44614",
+        "Name": "sorting one list by another",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -596.348197718265,
         "Y": -236.4075542451186
       },
       {
-        "Name": "run it",
-        "ShowGeometry": true,
         "Id": "d7d8db7c9d9c4f73b71598178c999ef0",
+        "Name": "run it",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -573.46979204939953,
-        "Y": 692.68364576345289
+        "ShowGeometry": true,
+        "X": -573.4697920493995,
+        "Y": 692.6836457634529
       },
       {
-        "Name": "sorting one list by another",
-        "ShowGeometry": true,
         "Id": "622565079c454b29b5953f4cba4f896d",
+        "Name": "sorting one list by another",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -703.17109534244992,
+        "ShowGeometry": true,
+        "X": -703.1710953424499,
         "Y": 393.275278893361
       },
       {
-        "Name": "List Create",
-        "ShowGeometry": true,
         "Id": "09a50c9a5017438a945f0887d86f10c2",
+        "Name": "List Create",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -25.042863718787657,
-        "Y": 615.53299660283892
+        "Y": 615.5329966028389
       },
       {
-        "Name": "Color Palette",
-        "ShowGeometry": true,
         "Id": "f622d832e23040aba94595b63553c882",
+        "Name": "Color Palette",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -217.32512402021757,
         "Y": 604.875056427109
       },
       {
-        "Name": "compare two lists",
-        "ShowGeometry": true,
         "Id": "bd6d3b7b0afd4bbc9ab239659a4a360f",
+        "Name": "compare two lists",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1130.70266210863,
         "Y": -156.63400169865204
       },
       {
-        "Name": "List.FilterByBoolMask",
-        "ShowGeometry": true,
         "Id": "7270227e86e6497b8c8c1f028475de7b",
+        "Name": "List.FilterByBoolMask",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -902.44410896932845,
+        "ShowGeometry": true,
+        "X": -902.4441089693285,
         "Y": -290.34592390850696
       },
       {
-        "Name": "List.FilterByBoolMask",
-        "ShowGeometry": true,
         "Id": "62ecbb92d14b4d1fa87134a902f70c03",
+        "Name": "List.FilterByBoolMask",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -862.8393323647515,
-        "Y": 97.349088533551765
+        "Y": 97.34908853355176
       },
       {
-        "Name": "compare two lists",
-        "ShowGeometry": true,
         "Id": "03f9292dc1904c7590f0f2a53c170978",
+        "Name": "compare two lists",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1091.0978855040535,
         "Y": 231.06101074340677
       },
       {
-        "Name": "get date",
-        "ShowGeometry": true,
         "Id": "9141a4b7e7694fd798512b85f6880c01",
+        "Name": "get date",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -868.10727500519306,
-        "Y": 475.21862484879978
+        "ShowGeometry": true,
+        "X": -868.1072750051931,
+        "Y": 475.2186248487998
       },
       {
-        "Name": "get date",
-        "ShowGeometry": true,
         "Id": "6815f188174147e08f13ffe6eab0cacf",
+        "Name": "get date",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -763.24983933691965,
+        "ShowGeometry": true,
+        "X": -763.2498393369196,
         "Y": -125.70849141014241
       },
       {
-        "Name": "get tagged element",
-        "ShowGeometry": true,
         "Id": "0c23dad010c04cbe8db98069d4e36a7f",
+        "Name": "get tagged element",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -1093.4475164238565,
         "Y": 550.222000159013
       },
       {
-        "Name": "sorted",
-        "ShowGeometry": true,
         "Id": "7927696cf7a240eb80123a973d623d87",
+        "Name": "sorted",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
+        "ShowGeometry": true,
         "X": -2003.1592365786476,
         "Y": 1182.0003703729667
       }
@@ -2607,11 +2588,12 @@
         "HeightAdjustment": 0.0,
         "Nodes": [],
         "HasNestedGroups": false,
-        "Left": -989.56109763541474,
-        "Top": 1074.2876542255019,
+        "Left": -675.361378377783,
+        "Top": 1276.8950298677025,
         "Width": 0.0,
         "Height": 0.0,
         "FontSize": 36.0,
+        "GroupStyleId": "00000000-0000-0000-0000-000000000000",
         "InitialTop": 0.0,
         "InitialHeight": 0.0,
         "TextblockHeight": 0.0,
@@ -2631,6 +2613,7 @@
         "Width": 0.0,
         "Height": 0.0,
         "FontSize": 36.0,
+        "GroupStyleId": "00000000-0000-0000-0000-000000000000",
         "InitialTop": 0.0,
         "InitialHeight": 0.0,
         "TextblockHeight": 0.0,
@@ -2650,6 +2633,7 @@
         "Width": 0.0,
         "Height": 0.0,
         "FontSize": 36.0,
+        "GroupStyleId": "00000000-0000-0000-0000-000000000000",
         "InitialTop": 0.0,
         "InitialHeight": 0.0,
         "TextblockHeight": 0.0,
@@ -2669,14 +2653,15 @@
         "Width": 0.0,
         "Height": 0.0,
         "FontSize": 36.0,
+        "GroupStyleId": "00000000-0000-0000-0000-000000000000",
         "InitialTop": 0.0,
         "InitialHeight": 0.0,
         "TextblockHeight": 0.0,
         "Background": "#FFC1D676"
       }
     ],
-    "X": 1238.4884058640948,
-    "Y": -92.887908621938323,
-    "Zoom": 0.44038032822424111
+    "X": 700.9380242383951,
+    "Y": 117.1113147080392,
+    "Zoom": 0.11711167286748057
   }
 }
